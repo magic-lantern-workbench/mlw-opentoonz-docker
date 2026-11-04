@@ -1,0 +1,11 @@
+# Build logs
+*.log
+
+# Editor backups
+*~
+
+# User project data (mounted into the container)
+projects/
+
+# Local overrides / secrets
+.env

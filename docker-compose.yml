@@ -1,0 +1,31 @@
+services:
+  opentoonz:
+    image: mlw/opentoonz:ubuntu24.04
+    build:
+      context: .
+      args:
+        OPENTOONZ_REPO: ${OPENTOONZ_REPO:-https://github.com/WizzerWorks/opentoonz.git}
+        OPENTOONZ_REF: ${OPENTOONZ_REF:-magiclantern}
+        OPENTOONZ_REV: ${OPENTOONZ_REV:-none}
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+        BUILD_JOBS: ${BUILD_JOBS:-2}
+      # Needed only for the git@ URL: forwards your ssh-agent into the build
+      ssh:
+        - default
+    environment:
+      DISPLAY: ${DISPLAY:-:0}
+      XAUTHORITY: /tmp/.Xauthority
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-${HOME}/.Xauthority}:/tmp/.Xauthority:ro
+      - ./projects:/home/toonz/projects
+      - opentoonz-config:/home/toonz/.config
+    devices:
+      - /dev/dri:/dev/dri      # GPU / OpenGL acceleration
+    network_mode: host
+    stdin_open: true
+    tty: true
+
+volumes:
+  opentoonz-config:
