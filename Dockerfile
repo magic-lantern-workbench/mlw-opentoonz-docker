@@ -61,6 +61,24 @@ RUN (getent passwd ${UID} && userdel -r $(getent passwd ${UID} | cut -d: -f1) ||
 # and a new volume inherits ownership from this directory (otherwise it is root-owned).
 RUN mkdir -p /home/toonz/.config && chown toonz:${GID} /home/toonz/.config
 
+# Pre-seed OpenToonz's SystemVar.ini (the launcher script only writes it if missing) so
+# projects default to /home/toonz/projects, the bind mount of ./projects on the host.
+# Everything else matches the launcher's defaults.
+RUN mkdir -p /home/toonz/.config/OpenToonz \
+    && printf '%s\n' '[General]' \
+        'OPENTOONZROOT="/home/toonz/.config/OpenToonz/stuff"' \
+        'OpenToonzPROFILES="/home/toonz/.config/OpenToonz/stuff/profiles"' \
+        'TOONZCACHEROOT="/home/toonz/.config/OpenToonz/stuff/cache"' \
+        'TOONZCONFIG="/home/toonz/.config/OpenToonz/stuff/config"' \
+        'TOONZFXPRESETS="/home/toonz/.config/OpenToonz/stuff/fxs"' \
+        'TOONZLIBRARY="/home/toonz/.config/OpenToonz/stuff/library"' \
+        'TOONZPROFILES="/home/toonz/.config/OpenToonz/stuff/profiles"' \
+        'TOONZPROJECTS="/home/toonz/projects"' \
+        'TOONZROOT="/home/toonz/.config/OpenToonz/stuff"' \
+        'TOONZSTUDIOPALETTE="/home/toonz/.config/OpenToonz/stuff/studiopalette"' \
+        > /home/toonz/.config/OpenToonz/SystemVar.ini \
+    && chown -R toonz:${GID} /home/toonz/.config
+
 USER toonz
 WORKDIR /home/toonz
 ENV PATH=/opt/opentoonz/bin:$PATH \

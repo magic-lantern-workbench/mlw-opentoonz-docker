@@ -73,5 +73,36 @@ the builder's memory cap and, uncapped, froze the host. To avoid that:
 
 ## Runtime
 
-Projects are saved in `./projects`; settings persist in the `opentoonz-config` volume.
 Wayland hosts use XWayland via the X11 socket.
+
+### Where your data lives
+
+| What | Container path | Stored in | Survives `docker compose down` |
+|---|---|---|---|
+| Projects | `/home/toonz/projects` | `./projects` on the host (bind mount) | Yes, and visible from the host |
+| Settings, stock assets, library, cache | `/home/toonz/.config` | Docker named volume `opentoonz-config` | Yes. Only `docker compose down -v` / `docker volume rm` deletes it |
+
+OpenToonz's project root (`TOONZPROJECTS` in `~/.config/OpenToonz/SystemVar.ini`) is set to
+`/home/toonz/projects`, so new projects are saved in `./projects` by default. The image
+pre-seeds `SystemVar.ini` this way because OpenToonz's launcher script only writes it when
+it is missing.
+
+Notes:
+
+- The config volume must be owned by `toonz`. The image creates `/home/toonz/.config` for
+  this; without it Docker creates the volume root-owned and OpenToonz fails at startup with
+  "Undefined or empty". If you ever see that, remove the volume and start again.
+- A **volume that already existed** keeps its old `SystemVar.ini` (image changes don't
+  overwrite volume contents). To point an existing volume at `./projects`, edit the file:
+
+  ```bash
+  docker run --rm -v mlw-opentoonz-docker_opentoonz-config:/v alpine sh -c \
+    'sed -i "s|^TOONZPROJECTS=.*|TOONZPROJECTS=\"/home/toonz/projects\"|" /v/OpenToonz/SystemVar.ini \
+     && chown 1000:1000 /v/OpenToonz/SystemVar.ini'
+  ```
+
+- Projects created earlier in the old default location stay inside the volume
+  (`/home/toonz/.config/OpenToonz/stuff/projects`); copy them out if you want them in
+  `./projects`.
+- `./projects` must be writable by uid/gid 1000 (the image's `toonz` user, matching a typical
+  first host user). For another uid, build with `UID=... GID=...`.
