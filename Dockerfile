@@ -57,6 +57,10 @@ RUN (getent passwd ${UID} && userdel -r $(getent passwd ${UID} | cut -d: -f1) ||
     && useradd -m -u ${UID} -g ${GID} -s /bin/bash toonz \
     && chown -R toonz:${GID} /opt/opentoonz
 
+# The config dir must exist and be owned by toonz: compose mounts a named volume here,
+# and a new volume inherits ownership from this directory (otherwise it is root-owned).
+RUN mkdir -p /home/toonz/.config && chown toonz:${GID} /home/toonz/.config
+
 USER toonz
 WORKDIR /home/toonz
 ENV PATH=/opt/opentoonz/bin:$PATH \
