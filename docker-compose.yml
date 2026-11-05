@@ -23,6 +23,7 @@ services:
       - opentoonz-config:/home/toonz/.config
     devices:
       - /dev/dri:/dev/dri      # GPU / OpenGL acceleration
+    shm_size: 1gb            # Firefox (Help links) crashes tabs with Docker's default 64 MB /dev/shm
     network_mode: host
     stdin_open: true
     tty: true

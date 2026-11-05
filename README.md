@@ -75,6 +75,26 @@ the builder's memory cap and, uncapped, froze the host. To avoid that:
 
 Wayland hosts use XWayland via the X11 socket.
 
+### Help menu links
+
+OpenToonz opens links (Help menu, online manual) through `xdg-open`, which needs a browser.
+The container has no access to your host's browser, so the image includes Firefox (from
+Mozilla's apt repo, since Ubuntu's `firefox` package is a snap stub that cannot run in
+Docker) and sets `BROWSER=firefox`. Links open in a Firefox window inside the container.
+
+- The network is not the problem: the container uses `network_mode: host`, so no ports are
+  blocked.
+- This Firefox has its own empty profile: none of your host browser's logins, cookies or
+  bookmarks, and its profile is discarded when the container is removed.
+- `shm_size: 1gb` is set in `docker-compose.yml` because Firefox tabs crash with Docker's
+  default 64 MB `/dev/shm`.
+- Docker's default seccomp profile blocks user namespaces, so Firefox prints
+  `Sandbox: CanCreateUserNamespace() ... EPERM` and runs with a reduced content sandbox.
+  That is acceptable for browsing OpenToonz's documentation; do not use it for general
+  browsing. The container is intentionally not run with extra privileges to avoid this.
+- Mounting the host's D-Bus session socket to open links in the host browser was considered
+  and rejected: it would give the container access to your whole desktop session.
+
 ### Where your data lives
 
 | What | Container path | Stored in | Survives `docker compose down` |

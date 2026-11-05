@@ -49,6 +49,17 @@ RUN J=${BUILD_JOBS:-2}; [ "$J" -gt 0 ] 2>/dev/null || J=$(nproc); echo "make job
 RUN mkdir -p /opt/opentoonz \
     && cp -r /src/opentoonz/stuff /opt/opentoonz/stuff
 
+# Firefox so the Help-menu links work (OpenToonz opens links through xdg-open -> $BROWSER).
+# Ubuntu 24.04's own 'firefox' package is a snap stub that cannot run in Docker, so use
+# Mozilla's apt repository. This layer sits after the compile so it never triggers a recompile.
+RUN apt-get update && apt-get install -y --no-install-recommends wget xdg-utils \
+    && install -d -m 0755 /etc/apt/keyrings \
+    && wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O /etc/apt/keyrings/packages.mozilla.org.asc \
+    && echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" > /etc/apt/sources.list.d/mozilla.list \
+    && printf 'Package: *\nPin: origin packages.mozilla.org\nPin-Priority: 1000\n' > /etc/apt/preferences.d/mozilla \
+    && apt-get update && apt-get install -y --no-install-recommends firefox \
+    && rm -rf /var/lib/apt/lists/*
+
 # Non-root user; uid/gid overridable from compose to match the host user
 ARG UID=1000
 ARG GID=1000
@@ -82,6 +93,7 @@ RUN mkdir -p /home/toonz/.config/OpenToonz \
 USER toonz
 WORKDIR /home/toonz
 ENV PATH=/opt/opentoonz/bin:$PATH \
+    BROWSER=firefox \
     LD_LIBRARY_PATH=/opt/opentoonz/lib/opentoonz:/opt/opentoonz/lib:/usr/local/lib \
     QT_X11_NO_MITSHM=1
 CMD ["opentoonz"]
