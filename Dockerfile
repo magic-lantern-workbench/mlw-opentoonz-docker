@@ -1,9 +1,9 @@
 FROM ubuntu:24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-# HTTPS by default so no SSH keys are needed for a public repo.
-# For the SSH URL, build with:  --ssh default  and  OPENTOONZ_REPO=git@github.com:WizzerWorks/opentoonz.git
-ARG OPENTOONZ_REPO=https://github.com/WizzerWorks/opentoonz.git
+# SSH by default (needs a running ssh-agent; compose forwards it via --mount=type=ssh).
+# For HTTPS instead, set OPENTOONZ_REPO=https://github.com/WizzerWorks/opentoonz.git
+ARG OPENTOONZ_REPO=git@github.com:WizzerWorks/opentoonz.git
 ARG OPENTOONZ_REF=magiclantern
 # Parallel compile jobs. Default 2 keeps the host responsive; raise via BUILD_JOBS=N.
 # 0 = use all cores (nproc).

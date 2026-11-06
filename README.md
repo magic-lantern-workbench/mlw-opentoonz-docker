@@ -15,14 +15,14 @@ Env vars or `.env`:
 
 | Var | Default | Purpose |
 |---|---|---|
-| `OPENTOONZ_REPO` | HTTPS URL of WizzerWorks/opentoonz | Use `git@github.com:WizzerWorks/opentoonz.git` for SSH (needs a running `ssh-agent`; `SSH_AUTH_SOCK` is forwarded by BuildKit) |
+| `OPENTOONZ_REPO` | `git@github.com:WizzerWorks/opentoonz.git` | SSH URL (needs a running `ssh-agent`; `SSH_AUTH_SOCK` is forwarded by BuildKit). Use `https://github.com/WizzerWorks/opentoonz.git` for HTTPS |
 | `OPENTOONZ_REF` | `magiclantern` | Branch or tag to build. See [Source branch](#source-branch) |
 | `OPENTOONZ_REV` | `none` | Cache-buster for the `git clone` layer. See [After pushing new commits](#after-pushing-new-commits) |
 | `BUILD_JOBS` | `2` | Parallel compile jobs. `0` = all cores (not recommended, see [Keeping the host responsive](#keeping-the-host-responsive)). Each C++ job can use 2-3 GB RAM |
 
 ## Source branch
 
-The `magiclantern` branch carries fixes needed to compile with the GCC 13 / Qt 5 / glibc
+The `magiclantern` branch is based on upstream tag `v1.8.0` and carries fixes needed to compile with the GCC 13 / Qt 5 / glibc
 shipped in Ubuntu 24.04 (`tcg/hash.h` `size_t` shadowing, a stray control character in
 `twain.h`, missing `<QPainterPath>` includes, and the removed `<sys/sysctl.h>`).
 Building `master` or `v1.4.0` will most likely fail to compile on this base image.

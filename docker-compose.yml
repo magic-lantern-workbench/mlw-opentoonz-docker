@@ -4,7 +4,7 @@ services:
     build:
       context: .
       args:
-        OPENTOONZ_REPO: ${OPENTOONZ_REPO:-https://github.com/WizzerWorks/opentoonz.git}
+        OPENTOONZ_REPO: ${OPENTOONZ_REPO:-git@github.com:WizzerWorks/opentoonz.git}
         OPENTOONZ_REF: ${OPENTOONZ_REF:-magiclantern}
         OPENTOONZ_REV: ${OPENTOONZ_REV:-none}
         UID: ${UID:-1000}
