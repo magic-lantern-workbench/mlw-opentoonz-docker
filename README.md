@@ -4,7 +4,7 @@ Builds https://github.com/WizzerWorks/opentoonz from source (Qt5, Release) and r
 
 ```bash
 mkdir -p projects
-docker compose build      # long: full OpenToonz compile (~20 min at BUILD_JOBS=2)
+docker compose build      # long: full OpenToonz compile (~25-30 min at BUILD_JOBS=2)
 xhost +local:docker       # allow container to reach your X server (once per login)
 UID=$(id -u) GID=$(id -g) docker compose up
 ```
@@ -17,15 +17,16 @@ Env vars or `.env`:
 |---|---|---|
 | `OPENTOONZ_REPO` | `git@github.com:WizzerWorks/opentoonz.git` | SSH URL (needs a running `ssh-agent`; `SSH_AUTH_SOCK` is forwarded by BuildKit). Use `https://github.com/WizzerWorks/opentoonz.git` for HTTPS |
 | `OPENTOONZ_REF` | `magiclantern` | Branch or tag to build. See [Source branch](#source-branch) |
-| `OPENTOONZ_REV` | `none` | Cache-buster for the `git clone` layer. See [After pushing new commits](#after-pushing-new-commits) |
+| `OPENTOONZ_REV` | `none` | Cache-buster for the `git clone` layer. `.env.example` pins it to the `magiclantern` commit last built (`96f6ce6`). See [After pushing new commits](#after-pushing-new-commits) |
 | `BUILD_JOBS` | `2` | Parallel compile jobs. `0` = all cores (not recommended, see [Keeping the host responsive](#keeping-the-host-responsive)). Each C++ job can use 2-3 GB RAM |
 
 ## Source branch
 
-The `magiclantern` branch is based on upstream tag `v1.8.0` and carries fixes needed to compile with the GCC 13 / Qt 5 / glibc
-shipped in Ubuntu 24.04 (`tcg/hash.h` `size_t` shadowing, a stray control character in
-`twain.h`, missing `<QPainterPath>` includes, and the removed `<sys/sysctl.h>`).
-Building `master` or `v1.4.0` will most likely fail to compile on this base image.
+The `magiclantern` branch is `v1.8.0` of upstream OpenToonz plus fixes needed to compile
+with the GCC 13 / Qt 5 / glibc shipped in Ubuntu 24.04 (`tcg/hash.h` `size_t` shadowing, a
+stray control character in `twain.h`, missing `<QPainterPath>` includes, and the removed
+`<sys/sysctl.h>` in `tfarmserver`). Because plain `v1.8.0` lacks these fixes, building it (or
+upstream `master`) on this base image will most likely fail to compile.
 
 ## After pushing new commits
 
