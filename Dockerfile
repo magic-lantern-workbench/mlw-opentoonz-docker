@@ -52,13 +52,17 @@ RUN mkdir -p /opt/opentoonz \
 # Firefox so the Help-menu links work (OpenToonz opens links through xdg-open -> $BROWSER).
 # Ubuntu 24.04's own 'firefox' package is a snap stub that cannot run in Docker, so use
 # Mozilla's apt repository. This layer sits after the compile so it never triggers a recompile.
-RUN apt-get update && apt-get install -y --no-install-recommends wget xdg-utils \
+RUN apt-get update && apt-get install -y --no-install-recommends wget xdg-utils dbus-x11 \
     && install -d -m 0755 /etc/apt/keyrings \
     && wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O /etc/apt/keyrings/packages.mozilla.org.asc \
     && echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" > /etc/apt/sources.list.d/mozilla.list \
     && printf 'Package: *\nPin: origin packages.mozilla.org\nPin-Priority: 1000\n' > /etc/apt/preferences.d/mozilla \
     && apt-get update && apt-get install -y --no-install-recommends firefox \
     && rm -rf /var/lib/apt/lists/*
+
+# xdg-open helper: opens each link as a new tab in the already-running Firefox
+COPY open-url /usr/local/bin/open-url
+RUN chmod 0755 /usr/local/bin/open-url
 
 # Non-root user; uid/gid overridable from compose to match the host user
 ARG UID=1000
@@ -93,7 +97,10 @@ RUN mkdir -p /home/toonz/.config/OpenToonz \
 USER toonz
 WORKDIR /home/toonz
 ENV PATH=/opt/opentoonz/bin:$PATH \
-    BROWSER=firefox \
+    BROWSER=/usr/local/bin/open-url \
+    MOZ_DBUS_REMOTE=1 \
     LD_LIBRARY_PATH=/opt/opentoonz/lib/opentoonz:/opt/opentoonz/lib:/usr/local/lib \
     QT_X11_NO_MITSHM=1
-CMD ["opentoonz"]
+# A private D-Bus session shared by OpenToonz and the Firefox it spawns: Firefox's X11
+# remote mechanism hangs here, but D-Bus remote lets later links open as new tabs.
+CMD ["dbus-run-session", "--", "opentoonz"]

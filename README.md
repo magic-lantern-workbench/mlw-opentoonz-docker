@@ -81,7 +81,7 @@ Wayland hosts use XWayland via the X11 socket.
 OpenToonz opens links (Help menu, online manual) through `xdg-open`, which needs a browser.
 The container has no access to your host's browser, so the image includes Firefox (from
 Mozilla's apt repo, since Ubuntu's `firefox` package is a snap stub that cannot run in
-Docker) and sets `BROWSER=firefox`. Links open in a Firefox window inside the container.
+Docker) and sets `BROWSER` to a small wrapper (`open-url`) that runs `firefox --new-tab`, so every link opens as a new tab in the same Firefox window inside the container.
 
 - The network is not the problem: the container uses `network_mode: host`, so no ports are
   blocked.

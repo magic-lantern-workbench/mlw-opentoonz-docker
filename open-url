@@ -1,0 +1,11 @@
+#!/bin/sh
+# BROWSER helper for xdg-open: open each URL as a new tab in the running Firefox
+# (or start Firefox if none is running).
+#
+# If no Firefox process is alive, a profile lock left behind by a crashed or killed
+# instance would make the next launch fail with "Firefox is already running, but is
+# not responding", so clear stale locks first.
+if ! pgrep -u "$(id -u)" -x firefox >/dev/null 2>&1; then
+    rm -f "$HOME"/.mozilla/firefox/*/lock "$HOME"/.mozilla/firefox/*/.parentlock 2>/dev/null
+fi
+exec firefox --new-tab "$@"
