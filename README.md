@@ -93,6 +93,11 @@ Docker) and sets `BROWSER` to a small wrapper (`open-url`) that runs `firefox --
   `Sandbox: CanCreateUserNamespace() ... EPERM` and runs with a reduced content sandbox.
   That is acceptable for browsing OpenToonz's documentation; do not use it for general
   browsing. The container is intentionally not run with extra privileges to avoid this.
+- Firefox's default X11 remote mechanism hangs in this container, so a second link failed with
+  "Firefox is already running, but is not responding". The image therefore installs
+  `dbus-x11`, sets `MOZ_DBUS_REMOTE=1` and starts OpenToonz under `dbus-run-session`. That gives
+  OpenToonz and the Firefox it launches one private D-Bus session inside the container, and
+  later links open as new tabs in the existing window.
 - Mounting the host's D-Bus session socket to open links in the host browser was considered
   and rejected: it would give the container access to your whole desktop session.
 
