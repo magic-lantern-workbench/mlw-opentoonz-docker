@@ -72,6 +72,27 @@ the builder's memory cap and, uncapped, froze the host. To avoid that:
 - The OpenToonz libraries install to `/opt/opentoonz/lib/opentoonz`; both that path and
   `/opt/opentoonz/bin` are set in the image's `LD_LIBRARY_PATH` / `PATH`.
 
+## SANE scanner support
+
+The image is built with SANE scanner support (`HAVE_SANE`):
+
+- The Dockerfile installs `libsane-dev` (alongside `libusb-1.0-0-dev`), and the CMake
+  configure step passes `-DCMAKE_C_FLAGS="-DHAVE_SANE" -DCMAKE_CXX_FLAGS="-DHAVE_SANE"`.
+  OpenToonz's CMake also detects `sane-backends` itself and prints
+  `SANE scanner support: enabled`; check for that line in the build output.
+- No extra build arguments are needed. To confirm the support is really compiled in, rebuild
+  from scratch so no cached layer from an older, non-SANE build is reused:
+
+  ```bash
+  docker compose build --no-cache
+  ```
+
+  A full rebuild takes the same ~25-30 min as the first build. Note that `--no-cache` also
+  re-clones the source, so it picks up the current head of `OPENTOONZ_REF`.
+- Not yet verified with a physical scanner. `docker-compose.yml` does not pass USB devices
+  into the container (only `/dev/dri`), so reaching a USB scanner from the container will
+  need a device mapping such as `/dev/bus/usb`, or a network scanner reachable through SANE.
+
 ## Runtime
 
 Wayland hosts use XWayland via the X11 socket.

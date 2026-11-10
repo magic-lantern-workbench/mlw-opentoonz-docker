@@ -37,7 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential cmake git ca-certificates openssh-client pkg-config \
         libboost-all-dev libegl1-mesa-dev libfreetype6-dev libgl1-mesa-dev \
         libglew-dev libglib2.0-dev libjpeg-dev libjson-c-dev liblz4-dev \
-        liblzo2-dev libpng-dev libsuperlu-dev libusb-1.0-0-dev libsdl2-dev \
+        liblzo2-dev libpng-dev libsuperlu-dev libusb-1.0-0-dev libsane-dev libsdl2-dev \
         libmypaint-dev libopencv-dev libturbojpeg0-dev libtiff-dev \
         freeglut3-dev libqt5multimedia5-plugins libx11-dev zlib1g-dev liblzma-dev \
         qtbase5-dev qtscript5-dev qt5-qmake qtmultimedia5-dev \
@@ -65,6 +65,7 @@ RUN mkdir build
 WORKDIR /src/opentoonz/toonz/build
 RUN J=${BUILD_JOBS:-2}; [ "$J" -gt 0 ] 2>/dev/null || J=$(nproc); echo "make jobs: $J"; \
     cmake ../sources -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_FLAGS="-DHAVE_SANE" -DCMAKE_CXX_FLAGS="-DHAVE_SANE" \
         || echo "WARNING: cmake exited non-zero (Qt translation-rule errors); continuing"; \
     nice -n 19 ionice -c3 make -k -j"$J" \
     && make install
