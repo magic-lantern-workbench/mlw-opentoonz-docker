@@ -17,7 +17,7 @@ Env vars or `.env`:
 |---|---|---|
 | `OPENTOONZ_REPO` | `git@github.com:WizzerWorks/opentoonz.git` | SSH URL (needs a running `ssh-agent`; `SSH_AUTH_SOCK` is forwarded by BuildKit). Use `https://github.com/WizzerWorks/opentoonz.git` for HTTPS |
 | `OPENTOONZ_REF` | `magiclantern` | Branch or tag to build. See [Source branch](#source-branch) |
-| `OPENTOONZ_REV` | `none` | Cache-buster for the `git clone` layer. `.env.example` pins it to the `magiclantern` commit last built (`96f6ce6`). See [After pushing new commits](#after-pushing-new-commits) |
+| `OPENTOONZ_REV` | `none` | Cache-buster for the `git clone` layer. `.env.example` pins it to the `magiclantern` commit last built (`c18b034`). See [After pushing new commits](#after-pushing-new-commits) |
 | `BUILD_JOBS` | `2` | Parallel compile jobs. `0` = all cores (not recommended, see [Keeping the host responsive](#keeping-the-host-responsive)). Each C++ job can use 2-3 GB RAM |
 
 ## Source branch
@@ -89,7 +89,22 @@ The image is built with SANE scanner support (`HAVE_SANE`):
 
   A full rebuild takes the same ~25-30 min as the first build. Note that `--no-cache` also
   re-clones the source, so it picks up the current head of `OPENTOONZ_REF`.
-- Not yet verified with a physical scanner. `docker-compose.yml` does not pass USB devices
+- **Network scanners (eSCL/WSD)** are discovered automatically over mDNS. The image runs its
+  own **browse-only** Avahi daemon (with a private system D-Bus) started by `entrypoint.sh`,
+  and includes the `sane-airscan` backend plus `scanimage` for debugging. The container starts
+  as root only so the entrypoint can launch these, then drops to the `toonz` user. Avahi is
+  configured not to publish anything, so it does not clash with the host's own Avahi
+  (the container shares the host network). Check what the container sees with
+  `docker compose run --rm --entrypoint scanimage opentoonz -L`; it should match the host's
+  `scanimage -L`.
+- To add a scanner that mDNS cannot find (another subnet, mDNS blocked), list it in
+  `sane/airscan.conf`, which compose bind-mounts over `/etc/sane.d/airscan.conf`, e.g.
+  `"HP LaserJet MFP M234sdw" = https://192.168.1.24:443/eSCL, eSCL` under `[devices]`
+  (address from the host's `scanimage -L`, plus `/eSCL`). Static entries work alongside
+  discovery; a scanner that is both listed and discovered just appears twice. If Avahi ever
+  fails to start (the entrypoint warns), airscan aborts and lists nothing, even static
+  devices: add `discovery = disable` under `[options]` to fall back to static entries only.
+- Define Scanner lists a network SANE scanner (verified with an HP LaserJet MFP M234sdw). Scanning itself has not been verified. `docker-compose.yml` does not pass USB devices
   into the container (only `/dev/dri`), so reaching a USB scanner from the container will
   need a device mapping such as `/dev/bus/usb`, or a network scanner reachable through SANE.
 

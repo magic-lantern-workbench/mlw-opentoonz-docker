@@ -44,6 +44,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-${HOME}/.Xauthority}:/tmp/.Xauthority:ro
       - ./projects:/home/toonz/projects
+      - ./sane/airscan.conf:/etc/sane.d/airscan.conf:ro   # network scanners, see the file
       - opentoonz-config:/home/toonz/.config
     devices:
       - /dev/dri:/dev/dri      # GPU / OpenGL acceleration

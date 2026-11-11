@@ -74,16 +74,29 @@ RUN J=${BUILD_JOBS:-2}; [ "$J" -gt 0 ] 2>/dev/null || J=$(nproc); echo "make job
 RUN mkdir -p /opt/opentoonz \
     && cp -r /src/opentoonz/stuff /opt/opentoonz/stuff
 
+# sane-airscan: SANE backend for eSCL/WSD network scanners; sane-utils gives `scanimage` for
+# debugging; avahi-daemon + dbus let them be discovered via mDNS (started by entrypoint.sh;
+# static devices can still be listed in sane/airscan.conf).
 # Firefox so the Help-menu links work (OpenToonz opens links through xdg-open -> $BROWSER).
 # Ubuntu 24.04's own 'firefox' package is a snap stub that cannot run in Docker, so use
 # Mozilla's apt repository. This layer sits after the compile so it never triggers a recompile.
 RUN apt-get update && apt-get install -y --no-install-recommends wget xdg-utils dbus-x11 \
+        sane-airscan sane-utils avahi-daemon dbus \
     && install -d -m 0755 /etc/apt/keyrings \
     && wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O /etc/apt/keyrings/packages.mozilla.org.asc \
     && echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" > /etc/apt/sources.list.d/mozilla.list \
     && printf 'Package: *\nPin: origin packages.mozilla.org\nPin-Priority: 1000\n' > /etc/apt/preferences.d/mozilla \
     && apt-get update && apt-get install -y --no-install-recommends firefox \
     && rm -rf /var/lib/apt/lists/*
+
+# Avahi only browses: never publish this container's hostname/services on the host network
+# (it shares the host's network stack, and the host runs its own Avahi).
+RUN sed -i -e 's/^#\?disable-publishing=.*/disable-publishing=yes/' \
+           -e 's/^#\?disable-user-service-publishing=.*/disable-user-service-publishing=yes/' \
+           -e 's/^#\?publish-hinfo=.*/publish-hinfo=no/' \
+           -e 's/^#\?publish-workstation=.*/publish-workstation=no/' \
+           /etc/avahi/avahi-daemon.conf \
+    && grep -q '^disable-publishing=yes' /etc/avahi/avahi-daemon.conf
 
 # xdg-open helper: opens each link as a new tab in the already-running Firefox
 COPY open-url /usr/local/bin/open-url
@@ -119,7 +132,10 @@ RUN mkdir -p /home/toonz/.config/OpenToonz \
         > /home/toonz/.config/OpenToonz/SystemVar.ini \
     && chown -R toonz:${GID} /home/toonz/.config
 
-USER toonz
+# Starts as root so entrypoint.sh can run dbus/avahi, then drops to the 'toonz' user.
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 0755 /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 WORKDIR /home/toonz
 ENV PATH=/opt/opentoonz/bin:$PATH \
     BROWSER=/usr/local/bin/open-url \
