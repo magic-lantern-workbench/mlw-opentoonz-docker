@@ -17,7 +17,7 @@ Env vars or `.env`:
 |---|---|---|
 | `OPENTOONZ_REPO` | `git@github.com:WizzerWorks/opentoonz.git` | SSH URL (needs a running `ssh-agent`; `SSH_AUTH_SOCK` is forwarded by BuildKit). Use `https://github.com/WizzerWorks/opentoonz.git` for HTTPS |
 | `OPENTOONZ_REF` | `magiclantern` | Branch or tag to build. See [Source branch](#source-branch) |
-| `OPENTOONZ_REV` | `none` | Cache-buster for the `git clone` layer. `.env.example` pins it to the `magiclantern` commit last built (`c18b034`). See [After pushing new commits](#after-pushing-new-commits) |
+| `OPENTOONZ_REV` | `none` | Cache-buster for the `git clone` layer. `.env.example` pins it to the `magiclantern` commit last built (`e13300f`). See [After pushing new commits](#after-pushing-new-commits) |
 | `BUILD_JOBS` | `2` | Parallel compile jobs. `0` = all cores (not recommended, see [Keeping the host responsive](#keeping-the-host-responsive)). Each C++ job can use 2-3 GB RAM |
 
 ## Source branch
